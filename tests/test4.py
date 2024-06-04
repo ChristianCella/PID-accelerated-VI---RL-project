@@ -15,6 +15,8 @@ np.random.seed(1)
 from joblib import Parallel, delayed
 import multiprocessing
 
+import sys 
+sys.path.append('.')
 # Import all the functions defined inside 'ValueIteration.py' and import also the class defined in 'FiniteMDP.py'
 import MDPs as mdp
 

@@ -1,6 +1,6 @@
 # RL project
 ## Structure
-The project is subdivided in 3 main folders, 2 of which ([Frozenlake_example](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/Frozenlake_example) and [src](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/src)) are not 'packages' (no '__init__.py') and they are not strictly related to the project; more in detail:
+The project is subdivided in 4 main folders, 3 of which ([Frozenlake_example](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/Frozenlake_example) and [src](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/src)) are not 'packages' (no '__init__.py') and they are not strictly related to the project; more in detail:
 - [Frozenlake_example](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/Frozenlake_example), is a folder conatining a very simple testbed for Reinforcement Learning using a tabular approach (it is subdivided into a training phase and a post-training phase);
 - [src](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/src) is the unmodified repo of the authors, added to the project just to have all the material as close as possible in case some changes need to be made.
 

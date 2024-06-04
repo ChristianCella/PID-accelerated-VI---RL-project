@@ -1,7 +1,5 @@
 """ 
-This script allows to obatin the figures 1a and 1b of the paper, depending on the policy that is specified. In this script, you can also import
-the custom class 'FrozenLake', useful in the reproducibility report.
-With this script it is possible to plot the norm of the error for the different gains as a function of the number of iterations.
+This script allows to obatin the figures 3 of the paper, depending on the policy that is specified.
 """
 
 # Import standard libraries
@@ -10,18 +8,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 
+import sys 
+sys.path.append('.')
 # Import the package conatining all funcrions and classes to be used
 import MDPs as mdp
 
-# Define the main parameters of the problem
+# Define the parameters of the problem
 discount = 0.99
 iter_no = 2000
 Gain = namedtuple('Gain', ['kP', 'kI', 'kD', 'I_alpha', 'I_beta'], defaults = [1, 0, 0, 0, 0])
 error_norm_ord = np.inf # or 2 or 1 or np.inf
 discount_str = str(discount).replace('.','p')
+meta_lr = 0.05
+normalization_eps = 1e-20
+hyperparam_detail = '(eta,eps)=(' + str(meta_lr).replace('.','p') +\
+                    ',' + str(normalization_eps).replace('.','p')+')'
+gain_list = [Gain(1.0, 0, 0, 0.05, 0.95)]
 
 # Define the problem to be analyzed
-ProblemType = 'FrozenLake'
+ProblemType = 'garnet'
 
 # Create an instance of the correct class
 if ProblemType == 'randomwalk':
@@ -68,31 +73,14 @@ elif ProblemType == 'FrozenLake':
     if pi is not None: # You need to know a deterministic policy beforehand
         print(f"The optimal value function obtained in matrix form is: {MDP.V}")
 
-
-# Select the gains as a function of the policy
-if pi is not None:
-            gain_list = [
-                        Gain(1.2,0,0,0.05,0.95),
-                        Gain(1,-0.4,0,0.05,0.95),
-                        Gain(1,0,0.15,0.05,0.95),
-                        # Gain(k_p_analyt, 0, k_d_analyt, 0.05, 0.95)
-                        # Gain(1,-0.4,0.15,0.05,0.95),
-                        ]
-
-        # Random Walk (control: remember, in this case you do not specify the policy)
-if pi is None:
-    gain_list = [
-                Gain(1.2,0,0,0.05,0.95),
-                Gain(1,0.75,0,0.05,0.95),
-                Gain(1,0,0.4,0.05,0.95),
-                Gain(1,0.75,0.4,0.05,0.95),
-                Gain(1.,0.7,0.2,0.05,0.95),
-                ]
-
-# Call the function defined above
-mdp.experiment_sample_behaviour(MDP, discount, pi, acc_param_list = gain_list,
+# Call the function
+mdp.experiment_sample_behaviour_gain_adaptation(MDP, discount, pi, acc_param_list = gain_list,
                             iter_no = iter_no,
                             error_norm_ord = error_norm_ord,
                             shown_states = 'adaptive', #[10,40],
+                            meta_lr = meta_lr, 
+                            normalization_eps = normalization_eps,
+                            normalization_flag = 'BE2',
                             gain_list = gain_list)
+
 show()

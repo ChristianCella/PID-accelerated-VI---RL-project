@@ -1,5 +1,7 @@
 """ 
-This script allows to obatin the figures 2 of the paper, depending on the policy that is specified.
+This script allows to obatin the figures 1a and 1b of the paper, depending on the policy that is specified. In this script, you can also import
+the custom class 'FrozenLake', useful in the reproducibility report.
+With this script it is possible to plot the norm of the error for the different gains as a function of the number of iterations.
 """
 
 # Import standard libraries
@@ -8,20 +10,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 
+import sys
+sys.path.append('.')
 # Import the package conatining all funcrions and classes to be used
 import MDPs as mdp
 
-# Define the parameters of the problem
+# Define the main parameters of the problem
 discount = 0.99
-iter_no = 500
+iter_no = 2000
 Gain = namedtuple('Gain', ['kP', 'kI', 'kD', 'I_alpha', 'I_beta'], defaults = [1, 0, 0, 0, 0])
-rlocus_flag = True
 error_norm_ord = np.inf # or 2 or 1 or np.inf
 discount_str = str(discount).replace('.','p')
-param_name = 'kI'
-param_range = (-0.5, 0.3) # Good range for kI (PE)
-
-resolution = 100 # resolution of the controller gain study
 
 # Define the problem to be analyzed
 ProblemType = 'FrozenLake'
@@ -71,37 +70,31 @@ elif ProblemType == 'FrozenLake':
     if pi is not None: # You need to know a deterministic policy beforehand
         print(f"The optimal value function obtained in matrix form is: {MDP.V}")
 
-# Define the default gain
-gain_default = Gain(1., 0.0, 0., 0.05, 0.95)
 
-# Call the function
-mdp.experiment_1D_param_sweep(MDP, discount, pi, 
-                        param_name = param_name,
-                        param_range = param_range, resolution = resolution,
-                        gain_default = gain_default,
-                        iter_no = iter_no,
-                        error_norm_ord = error_norm_ord) # Note that this is for the sup-norm
+# Select the gains as a function of the policy
+if pi is not None:
+            gain_list = [
+                        Gain(1.2,0,0,0.05,0.95),
+                        Gain(1,-0.4,0,0.05,0.95),
+                        Gain(1,0,0.15,0.05,0.95),
+                        # Gain(k_p_analyt, 0, k_d_analyt, 0.05, 0.95)
+                        # Gain(1,-0.4,0.15,0.05,0.95),
+                        ]
 
-# Additional check if you also want to plot the root locus
-if rlocus_flag:
-    file_name_detail = ProblemType +'(discount='+discount_str+')-root locus-'+ param_name +\
-                        ('(control)' if pi is None else '(PE)')
+        # Random Walk (control: remember, in this case you do not specify the policy)
+if pi is None:
+    gain_list = [
+                Gain(1.2,0,0,0.05,0.95),
+                Gain(1,0.75,0,0.05,0.95),
+                Gain(1,0,0.4,0.05,0.95),
+                Gain(1,0.75,0.4,0.05,0.95),
+                Gain(1.,0.7,0.2,0.05,0.95),
+                ]
 
-    # NOTE: the root locus doesn't make sense for the control case
-    if pi is None:
-        print("Warning! Root locus doesn't make sense for the control case.")
-    
-    # Set a dictionary of functions returning the error dynamics
-    P_controller = {'kP': lambda k: mdp.P_with_P(P, discount, k_p=k),
-                    'kI': lambda ki: mdp.P_with_PI(P, discount, ki, beta = gain_default.I_beta, alpha=gain_default.I_alpha),
-                    'kD': lambda kd: mdp.P_with_PD(P, discount, kd, D_term_type='basic')
-                    }
-
-    P = np.matrix(MDP.P[0])
-    P_fn = P_controller[param_name]
-    
-    # call the function
-    P_eig = mdp.plot_roots(P_fn, param_range = param_range,
-                        fig_filename = file_name_detail)
-    
+# Call the function defined above
+mdp.experiment_sample_behaviour(MDP, discount, pi, acc_param_list = gain_list,
+                            iter_no = iter_no,
+                            error_norm_ord = error_norm_ord,
+                            shown_states = 'adaptive', #[10,40],
+                            gain_list = gain_list)
 show()
