@@ -1,14 +1,21 @@
 """
 Example of the frozen lake.
 
-Reinforcement learning structure of the problem
------------------------------------------------
+The FrozenLake environment is a grid-based environment where the agent's objective is to navigate from a starting point to a goal while avoiding 
+holes and slippery surfaces. The state space consists of discrete positions on the grid, and the action space consists of discrete 
+movements (left, right, up, down).
 
-While dynamic programming techniques can theoretically be applied to solve the Frozen Lake problem if the environment's dynamics are known, 
-the typical usage of this environment in OpenAI Gym is for reinforcement learning experiments. 
-The emphasis is on learning through interaction and feedback, which aligns with the principles of reinforcement learning rather than the 
+While dynamic programming techniques can theoretically be applied to solve the Frozen Lake problem if the environment's dynamics are known (and they actually are), 
+the typical usage of this environment in OpenAI Gym is for reinforcement learning experiments (like in this code).
+
+NOTE: if we wanted to adpot dynamic programming to solve this problem, and we can since we know P, we should decide between Prediction (I wnat to know 
+how good V is) or control (I want to obtain V* and pi*). In case of Prediction we need to decide a policy pi beforehand, while in case of Control we can
+obtain the value of pi either iteratively (policy iteration = policy evaluation + policy improvement) or once the value of V* is known (value iteration).
+ 
+The emphasis is on learning through 'interaction-and-feedback', which aligns with the principles of reinforcement learning rather than the 
 model-based approach of dynamic programming.
-In this case, we are in RL (control), and we are using the Q-learning algorithm to solve the problem: this is a off-policy method that chooses the greedy action:
+
+In this case, we are in RL (control), and we are using the Q-learning algorithm to solve the problem: this is a 'off-policy' method that chooses the greedy action:
     * This is the same as Bellman Optimality operator applied in case of Value Iteration (DP).
     * The update rule is the following: Q(s, a) = (1 - alpha) * Q(s, a) + alpha * (r + gamma * max(Q(s', a')) - Q(s, a))
 
@@ -31,7 +38,9 @@ Assume this case: the Q-table at line 62, for example, is as follows:
 'Acting greedyly' means that the agent chooses the action with the highest Q-value. In this case, the agent is in state 62 and the 
 action with the highest Q-value is 2 = 'go right' (0.3).
 
-In the code it is specified to choose whether you are training (you want to create the Q-table) or testing (you want to use the Q-table)
+In the code it is specified to choose whether you are training (you want to create the Q-table) or testing (you want to use the Q-table); for the 
+training part you also have the possibility to compare the results obtained in Reinforcement Learning with thos you would obtain implementing 
+the Value Iteration algorithm for the case of control (policy = None).
 """
 
 import gymnasium as gym 
@@ -39,22 +48,28 @@ import numpy as np # To initialize the Q-table
 import matplotlib.pyplot as plt # To plot the rewards
 import pickle # To save the Q-table after the training is over
 
-def run(episodes, is_training_true = True, render = False):
+
+import sys
+sys.path.append('.')
+# Import the package conatining all funcrions and classes to be used
+import MDPs as mdp
+
+def run(episodes, is_training_true = True, render = False, comparison = False):
     
     # Set the environment and the q-table
     env = gym.make('FrozenLake-v1', map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None) # Create the environment
     
-    # If you are training: initilize the Q-table
+    # If you are training: initilize the q-table (in training you want to fill this)
     if(is_training_true):
         q = np.zeros((env.observation_space.n, env.action_space.n)) # Initialize the Q-table (64 states x 4 actions)
-    else: # Load the q-table
+    else: # Load the q-table, created during training
         f = open('FrozenLake_example/frozen_lake8x8.pkl', 'rb')
         q = pickle.load(f)
         f.close()
            
     # Set the hyperparameters
-    learning_rate_a = 0.9 # Learning rate (alpha)
-    discount_factor_g = 0.9 # Discount factor (gamma)
+    learning_rate_a = 0.99 # Learning rate (alpha)
+    discount_factor_g = 0.99 # Discount factor (gamma)
     
     # Implement the epsilon-greedy policy
     epsilon = 1 # I'm picking 100% random actions
@@ -76,9 +91,15 @@ def run(episodes, is_training_true = True, render = False):
             
             rand_numb = rng.random() # Generate a random number between 0 and 1
             
-            if is_training_true and rand_numb < epsilon: # Random action              
-                action = env.action_space.sample() # Random action (policy: it chooses a random action): 0 = left, 1 = down, 2 = right, 3 = up
-            else: # Follow the q-table (when epsilon is zero or when I'm not training: the agent is acting greedily and only follows the q-table)
+            if is_training_true and rand_numb < epsilon: # Random action  
+                
+                # Random action (policy: it chooses a random action): 0 = left, 1 = down, 2 = right, 3 = up
+                # This 'sampling' is synonimous with RL: the agent is exploring the environment (assuming we do not know the environment dynamics, even though we do)   
+                action = env.action_space.sample() 
+                
+            else: 
+                
+                # Follow the q-table (when epsilon is zero or when I'm not training: the agent is acting 'greedily' and only follows the q-table)
                 action = np.argmax(q[state, :]) # for the specific state choose the action whose index corresponds to the maximum value in the q-table
                 
             # Sample from the environment: this is the 'feedback' we get from the environment
@@ -88,11 +109,11 @@ def run(episodes, is_training_true = True, render = False):
                 
                 # After taking a step, update the q-table (only when training)
                 q[state, action] = q[state, action] + learning_rate_a * (reward + discount_factor_g * np.max(q[new_state, :]) - q[state, action])
-            
+                # Q[:, act] = R + discount * P[act] * V # 50x4 matrix
             # Update the state
             state = new_state
     
-        epsilon = max(epsilon - epsilon_decy_rate, 0) # Decrease epsilon
+        epsilon = max(epsilon - epsilon_decy_rate, 0) # Decrease epsilon = decrease the exploration
         
         # Decide the learning rate
         if(epsilon == 0):
@@ -105,7 +126,7 @@ def run(episodes, is_training_true = True, render = False):
     
     sum_rewards = np.zeros(episodes)
     for t in range(episodes):
-        sum_rewards[t] = np.sum(rewards_per_episode[max(0, t-100):(t + 1)]) # Show the rewards for every 100 episodes
+        sum_rewards[t] = np.sum(rewards_per_episode[max(0, t - 100) : (t + 1)]) # Show the rewards for every 100 episodes
         
     # Plot the rewards
     plt.plot(sum_rewards)
@@ -113,7 +134,7 @@ def run(episodes, is_training_true = True, render = False):
     plt.xlabel('Episodes')
     plt.ylabel('Number of rewards per 100 episodes')
     
-    if(is_training_true):
+    if is_training_true:
         
         # Save the q_table only when training
         f = open("FrozenLake_example/frozen_lake8x8.pkl", "wb")
@@ -121,11 +142,37 @@ def run(episodes, is_training_true = True, render = False):
         f.close()
         
     # print(f"The transition model of the environment is: {env.P}")
+    print(f"The q-table learned in Reinforcement Learning is: {q}")
+    
+    # verify that using Value Iteration, the q-table is the same
+    if comparison and is_training_true:
+
+        # Define the parameters for the Value Iteration
+        n_states = env.observation_space.n
+        n_actions = env.action_space.n
+        P_mat = env.P # Very complicated list of lists
+        R = np.zeros((n_states, 1)) # Specific for the FrozenLake problem
+        R[-1] = 1 # Only the last state has a reward of 1
+       
+        # calculate the P tensor
+        P = [np.matrix(np.zeros( (n_states, n_states))) for act in range(n_actions)]
+        
+        
+        for state in range(n_states):
+            for action in range(n_actions):
+                transitions = P_mat[state][action]
+                for prob, next_state, reward, done in transitions:
+                    P[action][state, next_state] += prob
+                   
+        # Call the function defined in 'vanilla_functions.py' (Control ==> Policy = None)
+        _, q_optimal, _ = mdp.value_iteration(R, P, discount_factor_g, IterationsNo = None, policy = None)
+        print(f"The optimal q-table obtained using DP is: {q_optimal}")
+    
         
 # test the environment
 if __name__ == '__main__':
     
-    # run(15000, is_training_true = True, render = False) # Training
-    run(1, is_training_true = False, render = True) # After the training is complete
+    run(15000, is_training_true = True, render = False, comparison = True) # Training
+    # run(1, is_training_true = False, render = True, comparison = False) # After the training is complete
     
     

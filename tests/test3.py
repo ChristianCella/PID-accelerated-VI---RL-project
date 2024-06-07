@@ -26,7 +26,7 @@ hyperparam_detail = '(eta,eps)=(' + str(meta_lr).replace('.','p') +\
 gain_list = [Gain(1.0, 0, 0, 0.05, 0.95)]
 
 # Define the problem to be analyzed
-ProblemType = 'garnet'
+ProblemType = 'FrozenLake'
 
 # Create an instance of the correct class
 if ProblemType == 'randomwalk':

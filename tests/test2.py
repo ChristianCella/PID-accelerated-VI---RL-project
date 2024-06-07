@@ -17,7 +17,7 @@ import MDPs as mdp
 discount = 0.99
 iter_no = 500
 Gain = namedtuple('Gain', ['kP', 'kI', 'kD', 'I_alpha', 'I_beta'], defaults = [1, 0, 0, 0, 0])
-rlocus_flag = True
+rlocus_flag = True # To plot also additional information about the eigenvalues using the root locus
 error_norm_ord = np.inf # or 2 or 1 or np.inf
 discount_str = str(discount).replace('.','p')
 param_name = 'kI'

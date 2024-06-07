@@ -79,7 +79,7 @@ def value_iteration(R, P, discount, IterationsNo = None, policy = None):
                 ° The optimal value function is obtained by implementing this formula: V_pi = inv(I - gamma * P_pi) * R_pi
         """
         if policy is None: # Control case
-            V = np.max(Q,axis = 1).reshape(state_size,1) # Reshape into a 50x1 column vector
+            V = np.max(Q, axis = 1).reshape(state_size,1) # Reshape into a 50x1 column vector
         else: # Prediction case (the result is the same as the one you would obtain by using the formula in 'VI_matrix_form.py')
             V = np.array([Q[m, policy[m]] for m in range(state_size)]).reshape(state_size, 1)
         # Append the 'iter-th' value function

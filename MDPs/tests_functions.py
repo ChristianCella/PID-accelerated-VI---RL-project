@@ -218,7 +218,7 @@ def experiment_sample_behaviour(MDP, discount, pi, acc_param_list = None,
         V_trace_acc.append(V_trace_new)
 
     """
-    The first figure allows to see Figure 1a) or 1b) in the paper, that is how the errorm varies as the number of iterations increases.
+    The first figure allows to see Figure 1a) or 1b) in the paper, that is how the error varies as the number of iterations increases.
     """
     figure(figsize = [7, 7])
     # rcParams['font.size'] = '15'
