@@ -199,22 +199,38 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         print(f"The optimal policy is: {policy_optimal}")
         
         # To have a more refined comparison, try to see if PPO (actor-critic method) gives the same policy      
-        ppo_mlp = PPO("MlpPolicy", env, verbose = 0, policy_kwargs = dict(net_arch = [dict(pi = [256, 256], vf = [256, 256])]))
+        ppo_mlp = PPO("MlpPolicy", env, verbose = 0, policy_kwargs = dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
         
         # Train the model and save the data
          
-        # ppo_mlp.learn(total_timesteps = 100000, log_interval = 4, progress_bar = True)
-        # ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
+        ppo_mlp.learn(total_timesteps = 100000, log_interval = 16, progress_bar = True)
+        ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
         
-        ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
+        # ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
         
         # Extract the policy          
-        #policy_vector = np.zeros(n_states, dtype=int)   
+        #policy_vector = np.zeros(n_states, dtype=int)  
+        
+        n_states = env.observation_space.n  # This assumes a discrete observation space
+        optimal_policy = np.zeros(n_states)
 
-        policy_vector = evaluate(env, ppo_mlp, num_episodes = 1)
+        for state in range(n_states):
+            observation = env.reset()
+            env.env.state = state  # Set the environment to the specific state
+            observation = np.array(observation)
+            action, _ = ppo_mlp.predict(observation[0])
+            optimal_policy[state] = action 
 
+        """ 
+        policy_vector = []
+        for state in range(n_states):
+            env.reset()
+            env.state = state
+            action, _ = ppo_mlp.predict(np.array(env.state))
+            policy_vector.append(action)
+        """
         print("Policy vector (n_states x 1):")
-        print(policy_vector)
+        print(optimal_policy)
         
     env.close() # Close the environment
                 
