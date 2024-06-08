@@ -21,4 +21,8 @@ For the case of prediction, you can also explicitly calculate $V^{\pi}$ by solvi
 In the paper, the solution of the matrix form was not present and an iterative procedure was presented in order to account both for Prediction and Control (that formula is not very easy to understand). However, by looking at [Bellman_matrix_form.py](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/blob/main/MDPs/Bellman_matrix_form.py) it is possible to see how no iteration is required if you want to obtain $V^{\pi}$ directly.
 One final remark: in the code [frozen_lake.py](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/blob/main/Frozenlake_example/frozen_lake.py), when calling the method 'value_iteration' during training, you are simply verifying that the q-table obtained in RL is equal to the one you would obtain (of course, for the case of Control), by using the 'strange' formula proposed by the authors.
 
+# NOTE
+
+The folder [Frozenlake_example](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/Frozenlake_example) is under improvement
+
 

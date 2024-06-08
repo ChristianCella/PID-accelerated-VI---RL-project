@@ -41,6 +41,9 @@ action with the highest Q-value is 2 = 'go right' (0.3).
 In the code it is specified to choose whether you are training (you want to create the Q-table) or testing (you want to use the Q-table); for the 
 training part you also have the possibility to compare the results obtained in Reinforcement Learning with thos you would obtain implementing 
 the Value Iteration algorithm for the case of control (policy = None).
+
+Some comparisons are also done with a specific policy-gradient method, called PPO (Proximal Policy Optimization), that
+is also what ChatGPT uses.
 """
 
 import gymnasium as gym 
@@ -48,11 +51,37 @@ import numpy as np # To initialize the Q-table
 import matplotlib.pyplot as plt # To plot the rewards
 import pickle # To save the Q-table after the training is over
 
+from stable_baselines3 import PPO
+
 
 import sys
 sys.path.append('.')
 # Import the package conatining all funcrions and classes to be used
 import MDPs as mdp
+
+def evaluate(env, policy, gamma = 1., num_episodes = 100):
+    """
+    Evaluate a RL agent
+    :param env: (Env object) the Gym environment
+    :param policy: (BasePolicy object) the policy in stable_baselines3
+    :param gamma: (float) the discount factor
+    :param num_episodes: (int) number of episodes to evaluate it
+    :return: (float) Mean reward for the last num_episodes
+    """
+    all_episode_rewards = []
+    for i in range(num_episodes): # iterate over the episodes
+
+        done = False
+        policy_vector = []
+        discounter = 1.
+        obs, _ = env.reset()
+        while not done: # iterate over the steps until you reach a termination and play the same action!
+            action, _ = policy.predict(obs)
+            policy_vector.append(action)
+            obs, reward, terminated, truncated, _ = env.step(action) # obs is the observation of the next state
+            done = terminated or truncated # 'or' returns True if at least one of the conditions is True
+            discounter *= gamma # update the discount factor
+    return policy_vector
 
 def run(episodes, is_training_true = True, render = False, comparison = False):
     
@@ -68,8 +97,8 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         f.close()
            
     # Set the hyperparameters
-    learning_rate_a = 0.99 # Learning rate (alpha)
-    discount_factor_g = 0.99 # Discount factor (gamma)
+    learning_rate_a = 0.9 # Learning rate (alpha)
+    discount_factor_g = 0.9 # Discount factor (gamma)
     
     # Implement the epsilon-greedy policy
     epsilon = 1 # I'm picking 100% random actions
@@ -121,8 +150,6 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
             
         if reward == 1:
             rewards_per_episode[i] = 1
-            
-    env.close() # Close the environment
     
     sum_rewards = np.zeros(episodes)
     for t in range(episodes):
@@ -145,7 +172,7 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
     print(f"The q-table learned in Reinforcement Learning is: {q}")
     
     # verify that using Value Iteration, the q-table is the same
-    if comparison and is_training_true:
+    if comparison:
 
         # Define the parameters for the Value Iteration
         n_states = env.observation_space.n
@@ -156,8 +183,7 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
        
         # calculate the P tensor
         P = [np.matrix(np.zeros( (n_states, n_states))) for act in range(n_actions)]
-        
-        
+               
         for state in range(n_states):
             for action in range(n_actions):
                 transitions = P_mat[state][action]
@@ -167,12 +193,38 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         # Call the function defined in 'vanilla_functions.py' (Control ==> Policy = None)
         _, q_optimal, _ = mdp.value_iteration(R, P, discount_factor_g, IterationsNo = None, policy = None)
         print(f"The optimal q-table obtained using DP is: {q_optimal}")
+        
+        # Now evaluate the optimal policy associated to that specific q-table
+        policy_optimal = np.argmax(q_optimal, axis = 1)
+        print(f"The optimal policy is: {policy_optimal}")
+        
+        # To have a more refined comparison, try to see if PPO (actor-critic method) gives the same policy      
+        ppo_mlp = PPO("MlpPolicy", env, verbose = 0, policy_kwargs = dict(net_arch = [dict(pi = [256, 256], vf = [256, 256])]))
+        
+        # Train the model and save the data
+         
+        # ppo_mlp.learn(total_timesteps = 100000, log_interval = 4, progress_bar = True)
+        # ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
+        
+        ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
+        
+        # Extract the policy          
+        #policy_vector = np.zeros(n_states, dtype=int)   
+
+        policy_vector = evaluate(env, ppo_mlp, num_episodes = 1)
+
+        print("Policy vector (n_states x 1):")
+        print(policy_vector)
+        
+    env.close() # Close the environment
+                
+
     
         
 # test the environment
 if __name__ == '__main__':
     
     run(15000, is_training_true = True, render = False, comparison = True) # Training
-    # run(1, is_training_true = False, render = True, comparison = False) # After the training is complete
+    # run(1, is_training_true = False, render = True, comparison = True) # After the training is complete
     
     
