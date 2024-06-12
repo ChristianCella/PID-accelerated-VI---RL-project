@@ -52,6 +52,8 @@ import matplotlib.pyplot as plt # To plot the rewards
 import pickle # To save the Q-table after the training is over
 
 from stable_baselines3 import PPO
+from stable_baselines3.common.evaluation import evaluate_policy
+import torch
 
 
 import sys
@@ -198,14 +200,25 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         policy_optimal = np.argmax(q_optimal, axis = 1)
         print(f"The optimal policy is: {policy_optimal}")
         
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            print("CUDA is available. Using GPU.")
+        else:
+            device = torch.device('cpu')
+            print("CUDA is not available. Using CPU.")
+                  
         # To have a more refined comparison, try to see if PPO (actor-critic method) gives the same policy      
-        ppo_mlp = PPO("MlpPolicy", env, verbose = 0, policy_kwargs = dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
+        ppo_mlp = PPO("MlpPolicy", env, verbose=1,
+                   learning_rate = 0.0001,
+                   device = device,
+                   policy_kwargs=dict(net_arch = [dict(pi=[32, 32], vf=[32, 32])]))
         
         # Train the model and save the data
          
-        ppo_mlp.learn(total_timesteps = 100000, log_interval = 16, progress_bar = True)
+        ppo_mlp.learn(total_timesteps = 1000000, log_interval = 4, progress_bar = True)
         ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
         
+        evaluate_policy(ppo_mlp, env, n_eval_episodes = 10, render = True)
         # ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
         
         # Extract the policy          
@@ -215,20 +228,12 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         optimal_policy = np.zeros(n_states)
 
         for state in range(n_states):
-            observation = env.reset()
-            env.env.state = state  # Set the environment to the specific state
-            observation = np.array(observation)
-            action, _ = ppo_mlp.predict(observation[0])
+            # env.reset()
+            # env.env.state = state  # Set the environment to the specific state
+            observation = np.array(state)
+            action, _ = ppo_mlp.predict(state)
             optimal_policy[state] = action 
-
-        """ 
-        policy_vector = []
-        for state in range(n_states):
-            env.reset()
-            env.state = state
-            action, _ = ppo_mlp.predict(np.array(env.state))
-            policy_vector.append(action)
-        """
+            
         print("Policy vector (n_states x 1):")
         print(optimal_policy)
         
