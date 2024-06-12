@@ -50,40 +50,15 @@ import gymnasium as gym
 import numpy as np # To initialize the Q-table
 import matplotlib.pyplot as plt # To plot the rewards
 import pickle # To save the Q-table after the training is over
-
+ 
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 import torch
-
 
 import sys
 sys.path.append('.')
 # Import the package conatining all funcrions and classes to be used
 import MDPs as mdp
-
-def evaluate(env, policy, gamma = 1., num_episodes = 100):
-    """
-    Evaluate a RL agent
-    :param env: (Env object) the Gym environment
-    :param policy: (BasePolicy object) the policy in stable_baselines3
-    :param gamma: (float) the discount factor
-    :param num_episodes: (int) number of episodes to evaluate it
-    :return: (float) Mean reward for the last num_episodes
-    """
-    all_episode_rewards = []
-    for i in range(num_episodes): # iterate over the episodes
-
-        done = False
-        policy_vector = []
-        discounter = 1.
-        obs, _ = env.reset()
-        while not done: # iterate over the steps until you reach a termination and play the same action!
-            action, _ = policy.predict(obs)
-            policy_vector.append(action)
-            obs, reward, terminated, truncated, _ = env.step(action) # obs is the observation of the next state
-            done = terminated or truncated # 'or' returns True if at least one of the conditions is True
-            discounter *= gamma # update the discount factor
-    return policy_vector
 
 def run(episodes, is_training_true = True, render = False, comparison = False):
     
@@ -206,20 +181,19 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         else:
             device = torch.device('cpu')
             print("CUDA is not available. Using CPU.")
-                  
+        device = torch.device("cuda")        
         # To have a more refined comparison, try to see if PPO (actor-critic method) gives the same policy      
         ppo_mlp = PPO("MlpPolicy", env, verbose=1,
-                   learning_rate = 0.0001,
+                   learning_rate = 0.001,
                    device = device,
-                   policy_kwargs=dict(net_arch = [dict(pi=[32, 32], vf=[32, 32])]))
+                   policy_kwargs=dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
         
         # Train the model and save the data
          
-        ppo_mlp.learn(total_timesteps = 1000000, log_interval = 4, progress_bar = True)
-        ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
+        #ppo_mlp.learn(total_timesteps = 1000000, log_interval = 8, progress_bar = True)
+        #ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
         
-        evaluate_policy(ppo_mlp, env, n_eval_episodes = 10, render = True)
-        # ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
+        ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
         
         # Extract the policy          
         #policy_vector = np.zeros(n_states, dtype=int)  
@@ -227,12 +201,11 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         n_states = env.observation_space.n  # This assumes a discrete observation space
         optimal_policy = np.zeros(n_states)
 
-        for state in range(n_states):
+        for s in range(n_states):
             # env.reset()
-            # env.env.state = state  # Set the environment to the specific state
-            observation = np.array(state)
-            action, _ = ppo_mlp.predict(state)
-            optimal_policy[state] = action 
+            #env.env.state = s  # Set the environment to the specific state
+            action, _ = ppo_mlp.predict(s, deterministic = True)  # Get the action from the model
+            optimal_policy[s] = action 
             
         print("Policy vector (n_states x 1):")
         print(optimal_policy)
@@ -245,7 +218,7 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
 # test the environment
 if __name__ == '__main__':
     
-    run(15000, is_training_true = True, render = False, comparison = True) # Training
-    # run(1, is_training_true = False, render = True, comparison = True) # After the training is complete
+    # run(15000, is_training_true = True, render = False, comparison = True) # Training
+    run(1, is_training_true = False, render = True, comparison = True) # After the training is complete
     
     
