@@ -174,7 +174,7 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         # Now evaluate the optimal policy associated to that specific q-table
         policy_optimal = np.argmax(q_optimal, axis = 1)
         print(f"The optimal policy is: {policy_optimal}")
-        
+
         if torch.cuda.is_available():
             device = torch.device('cuda')
             print("CUDA is available. Using GPU.")
@@ -189,7 +189,7 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
                    policy_kwargs=dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
         
         # Train the model and save the data
-         
+        
         #ppo_mlp.learn(total_timesteps = 1000000, log_interval = 8, progress_bar = True)
         #ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
         
