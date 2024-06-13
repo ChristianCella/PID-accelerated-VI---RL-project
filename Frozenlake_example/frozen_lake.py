@@ -194,21 +194,44 @@ def run(episodes, is_training_true = True, render = False, comparison = False):
         #ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
         
         ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy")
-        
+        env = ppo_mlp.get_env()
         # Extract the policy          
         #policy_vector = np.zeros(n_states, dtype=int)  
         
         n_states = env.observation_space.n  # This assumes a discrete observation space
         optimal_policy = np.zeros(n_states)
 
+        """ 
         for s in range(n_states):
             # env.reset()
             #env.env.state = s  # Set the environment to the specific state
             action, _ = ppo_mlp.predict(s, deterministic = True)  # Get the action from the model
             optimal_policy[s] = action 
+        """
+        
+
+        print('Using the agent')
+        episodes = 5
+        for episode in range(1, episodes + 1):
+            obs = env.reset()
+            print(f"the type of obs is {type(obs)}")
+            print(f"obs: {obs}")
+            done = False
+            score = 0
+
+            while not done:
+                env.render()
+                action, _ = ppo_mlp.predict(obs) # The model predicts the action to take based on the observation. output: action and the value of the next state (used in recurrent policies)
+                print(f"action: {action}")
+                obs, reward, done, info = env.step(action) # The environment takes the action and returns the new observation, the reward, if the episode is done, and additional information
+                print(f"the reward is {reward}")
+                score += reward
+                
+            print(f'Episode: {episode}, Score: {score}')
+
             
-        print("Policy vector (n_states x 1):")
-        print(optimal_policy)
+        #print("Policy vector (n_states x 1):")
+        #print(optimal_policy)
         
     env.close() # Close the environment
                 
