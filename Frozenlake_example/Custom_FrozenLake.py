@@ -240,12 +240,12 @@ def FrozenLakePPO(env, episodes, learning_rate, training):
     
 if __name__ == '__main__':
     
-    # Create an instance of rhe class
+    # Create an instance of the class
     render = True
     discount_factor_g = 0.6
     env = FrozenLake(desc = None, map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
     
-    
+    # regsiter the environment
     register(
     id = "FrozenLake-v1",
     entry_point = "__main__:FrozenLake",
