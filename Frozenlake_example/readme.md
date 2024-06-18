@@ -1,6 +1,6 @@
 # Frozen Lake example in detail
 
-This folder can be used to understand Reinforcement Learning in a better way. Frozen lake is one of the environments avaialble in OpenAI Gymnasium library and it is characterized by a discrete (finite) number of states and a discrete number of actions. Based on how it is defined, you can implement both Reinforcement Learning (RL)techniques and Dynamic Programming (DP) techniques.
+This folder can be used to understand Reinforcement Learning in a better way. Frozen lake is one of the environments avaialble in the OpenAI Gymnasium library and it is characterized by a discrete (finite) number of states and a discrete number of actions. Based on how it is defined, it is possible to implement both Reinforcement Learning (RL) techniques and Dynamic Programming (DP) techniques. In the file called
 
 ## main characteristics
 

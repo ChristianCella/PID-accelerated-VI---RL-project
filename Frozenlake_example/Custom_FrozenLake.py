@@ -1,24 +1,54 @@
 """ 
-Final version of the Frozenlake example.
+In this code we will modify the FrozenLake environment to make it more suitable for the lewrning of the optimal policy.
+PPo does not approximate the policy in a perfect way everywhere but, if correctly trained, it will approximnate the policy perfectly on the 
+optimal path?
 """
 
 import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
+from gymnasium.envs.registration import register
+from gymnasium.envs.toy_text.frozen_lake import FrozenLakeEnv
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import torch
+from numpy.linalg import inv
 
 import sys
 sys.path.append('.')
 import MDPs as mdp
 
+class FrozenLake(FrozenLakeEnv):
+    def __init__(self, desc = None,  map_name = '8x8', is_slippery = False, render_mode = None):
+        super().__init__(desc = desc, map_name = map_name, is_slippery = is_slippery, render_mode = render_mode)
+        
+    def step(self, action):
+        
+        # Call the parent class method
+        state, reward, done, truncated, info = super().step(action)
+        
+        # Modify the reward
+        if state == 63:
+            reward = 100
+        elif state in self.hole_states:
+            reward = -10
+        else:
+            reward = -1
+
+        return state, reward, done, truncated, info
+    
+    # Indices that describe the holes
+    @property
+    def hole_states(self):
+        return set([19, 29, 35, 41, 42, 46, 49, 52, 54, 59])
+    
+
 # Function for Reinforcement Learning
 def FrozenLakeRL(episodes, training, env, discount_factor_g):
-   
+
     print(" ------------- Reinforcement Learning: Q-learning ------------- ")
    
     # If you are training: initilize the q-table (in training you want to fill this)
@@ -30,8 +60,7 @@ def FrozenLakeRL(episodes, training, env, discount_factor_g):
         f.close()
            
     # Set the hyperparameters
-    learning_rate_a = 0.9 # Learning rate (alpha)
-    discount_factor_g = 0.9 # Discount factor (gamma)
+    learning_rate_a = 0.1 # Learning rate (alpha)
     
     # Implement the epsilon-greedy policy
     epsilon = 1 # I'm picking 100% random actions
@@ -63,6 +92,7 @@ def FrozenLakeRL(episodes, training, env, discount_factor_g):
                 
             # Sample from the environment: this is the 'feedback' we get from the environment
             new_state, reward, terminated, truncated, _ = env.step(action)
+            #print(f"The reward is: {reward}")
             
             if(training):              
                 # After taking a step, update the q-table (only when training)
@@ -99,30 +129,41 @@ def FrozenLakeRL(episodes, training, env, discount_factor_g):
     
     # Print the q-table obtained in Reinforcement Learning
     print(f"The q-table learned in Reinforcement Learning is: {q}")
-        
-    env.close()
-
+    
 # Function for Dynamic Programming    
 def FrozenLakeDP(env, discount_factor_g):
-    
+ 
     print(" ------------- Dynamic Programming: Value Iteration algorithm ------------- ")
     
     # Define the parameters for the Value Iteration algorithm
     n_states = env.observation_space.n
     n_actions = env.action_space.n
     P_mat = env.P # Very complicated list of lists
-    R = np.zeros((n_states, 1)) # Specific for the FrozenLake problem
-    R[-1] = 1 # Only the last state has a reward of 1
+    R = -np.ones((n_states, 1)) # Specific for the FrozenLake problem
+    R[-1] = 100 # Only the last state has a reward of 1
+    R[19] = -10
+    R[29] = -10
+    R[35] = -10
+    R[41] = -10
+    R[42] = -10
+    R[46] = -10
+    R[49] = -10
+    R[52] = -10
+    R[54] = -10
+    R[59] = -10
+    
+    print(f"The vector of rewards in DP is {R}")
     
     # calculate the P tensor (one 'P' for each action)
     P = [np.matrix(np.zeros( (n_states, n_states))) for act in range(n_actions)]
             
-    for state in range(n_states):
+    for state in range(n_states): 
         for action in range(n_actions):
             transitions = P_mat[state][action]
             for prob, next_state, reward, done in transitions:
                 P[action][state, next_state] += prob
-                
+    
+    print(f"The tensor P is: {P}")           
     # Call the function defined in 'vanilla_functions.py' (Control ==> Policy = None)
     _, q_optimal, _ = mdp.value_iteration(R, P, discount_factor_g, IterationsNo = None, policy = None)
     print(f"The optimal q-table obtained using DP is: {q_optimal}")
@@ -130,8 +171,7 @@ def FrozenLakeDP(env, discount_factor_g):
     # Now evaluate the optimal policy associated to that specific q-table
     policy_optimal = np.argmax(q_optimal, axis = 1)
     print(f"The optimal policy obtained in DP is: {policy_optimal.T}")
-
-# Function that implements the Proximal Policy Optimization (PPO) algorithm
+    
 def FrozenLakePPO(env, episodes, learning_rate, training):
   
     #
@@ -150,70 +190,80 @@ def FrozenLakePPO(env, episodes, learning_rate, training):
                 learning_rate = learning_rate,
                 device = device,
                 policy_kwargs=dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
-       
-    
-    if training:
-         
+          
+    if training:     
         # Train the model and save the data  
-        ppo_mlp.learn(total_timesteps = 1000000, log_interval = 8, progress_bar = True)
-        ppo_mlp.save("FrozenLake_example/ppo_mlp_optimal_policy")
-    else:
+        ppo_mlp.learn(total_timesteps = 500000, log_interval = 8, progress_bar = True)
+        ppo_mlp.save("FrozenLake_example/weightsNN")
+    elif training == False:
         # Load the data (if you already have a trained model)
-        ppo_mlp.load("FrozenLake_example/ppo_mlp_optimal_policy") 
+        model = ppo_mlp.load("FrozenLake_example/weightsNN") 
+        env = FrozenLake(desc = None, map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
+        print(f"Loaded")
     
-    # See what the agent is doing     
-    print('...Using the agent...')
-    env = ppo_mlp.get_env() 
-    
-    for episode in range(1, episodes + 1):
-        
-        obs = env.reset()
-        done = False
-        score = 0
+        # See what the agent is doing     
+        print('...Using the agent...')
 
-        while not done:
+        # get the trained environment
+        env = ppo_mlp.get_env() 
+
+        for episode in range(1, episodes + 1):
             
-            env.render()
-            action, _ = ppo_mlp.predict(obs) # The model predicts the action to take based on the observation. output: action and the value of the next state (used in recurrent policies)
-            print(f"The selected action is: {action}")
-            obs, reward, done, info = env.step(action) # The environment takes the action and returns the new observation, the reward, if the episode is done, and additional information
-            print(f"The reward is: {reward}")
-            score += reward
-            
-        print(f'Episode: {episode}, Score: {score}')
+            obs = env.reset()
+            done = False
+            score = 0
+
+            while not done:
+                
+                env.render()
+                action, _ = model.predict(obs) # The model predicts the action to take based on the observation. output: action and the value of the next state (used in recurrent policies)
+                print(f"The selected action is: {action}")
+                obs, reward, done, _ = env.step(action) # The environment takes the action and returns the new observation, the reward, if the episode is done, and additional information
+                print(f"The reward is: {reward}")
+                score += reward
+                
+            print(f'Episode: {episode}, Score: {score}')
+        
+    env.close()
 
     # Evaluate the optimal policy
     n_states = env.observation_space.n  # This assumes a discrete observation space
     optimal_policy = np.zeros(n_states)
 
     for s in range(n_states):
-        action, _ = ppo_mlp.predict(s, deterministic = True)  # Get the action from the model
+        action, _ = model.predict(s, deterministic = True)  # Get the action from the model
         optimal_policy[s] = action 
  
     #print("Policy vector (n_states x 1):")
     print(f"The optimal policy obtained with PPO is: {optimal_policy}")
-
+        
+    
 if __name__ == '__main__':
     
-    # Create the environment
+    # Create an instance of rhe class
     render = True
-    discount_factor_g = 0.9
-    env = gym.make('FrozenLake-v1', map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
+    discount_factor_g = 0.6
+    env = FrozenLake(desc = None, map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
     
     
-    # Reinforcement learning
-    # FrozenLakeRL(15000, training = True, env = env, discount_factor_g) # Training (set 'render' to False)
-    FrozenLakeRL(1, training = False, env = env, discount_factor_g = discount_factor_g) # After the training (set 'render' to True)
-
+    register(
+    id = "FrozenLake-v1",
+    entry_point = "__main__:FrozenLake",
+    max_episode_steps = 100, #  After 20 steps the episode terminates regardless if I reached or not  a terminal state
+    reward_threshold = 0,
+    )
+    
+    # Call the function
+    # FrozenLakeRL(15000, training = True, env = env, discount_factor_g = discount_factor_g) 
+    FrozenLakeRL(1, training = False, env = env, discount_factor_g = discount_factor_g)
+    
     # Dynamic programming
+    discount_factor_g = 0.6
     FrozenLakeDP(env, discount_factor_g)
     
     # Proximal Policy Optimization
-    episodes = 5
-    learning_rate = 0.001
-    training = False
     render = True
-    discount_factor_g = 0.9
-    env = gym.make('FrozenLake-v1', map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
-    FrozenLakePPO(env = env, episodes = episodes, learning_rate = learning_rate, training = training)
+    env = FrozenLake(desc = None, map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
+    FrozenLakePPO(env = env, episodes = 1, learning_rate = 0.0003, training = False)
     
+        

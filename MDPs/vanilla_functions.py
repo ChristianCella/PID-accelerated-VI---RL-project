@@ -49,13 +49,14 @@ def value_iteration(R, P, discount, IterationsNo = None, policy = None):
     action_size, state_size = np.shape(P)[0:2] # states = 50, actions = 4
     print(f"The number of actions is: {action_size} and the number of states is: {state_size}")
     
-    R = R.reshape(state_size,1) # reshape the rewards as an array 50x1       
+    R = R.reshape(state_size,1) # reshape the rewards as an array 50x1   
+    print(f"The reward is: {R}")    
     V = np.zeros( (state_size,1) ) # Initialize the value function to zero
     Q = np.matrix(np.zeros( (state_size, action_size) ) ) # Initialize the Q-values to zero
     
     # in case the number of iterations is not provided, set a default value based on the discount factor
     if IterationsNo == None:
-        IterationsNo = int(10 / (1 - discount))
+        IterationsNo = int(100 / (1 - discount))
         
     # Debugging
     VTrace = np.zeros( (state_size,IterationsNo)) # each column stores a value function for a specific iteration
