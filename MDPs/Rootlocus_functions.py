@@ -25,12 +25,11 @@ def plot_roots(P_func = None, param_range = (0,1), fig_filename = None):
     # fig, (ax1,ax2) = subplots(2,1) #, sharey=True)
     fig, (ax1) = subplots(1,1) #, sharey=True)
     
-    # print(np.max(P_eig.real), np.min(P_eig.real))
-    x_max = max(1.1, np.max(P_eig.real) + 0.1 )
-    x_min = min(-1.1, np.min(P_eig.real) - 0.1 )
+    x_max = np.max([1.1, np.max(P_eig.real) + 0.1 ])
+    x_min = np.min([-1.1, np.min(P_eig.real) - 0.1 ])
 
-    y_max = max(1.1, np.max(P_eig.imag) + 0.1 )
-    y_min = min(-1.1, np.min(P_eig.imag) - 0.1)
+    y_max = np.max([1.1, np.max(P_eig.imag) + 0.1])
+    y_min = np.min([-1.1, np.min(P_eig.imag) - 0.1])
 
     
     ax1.set_xlim(x_min,x_max)

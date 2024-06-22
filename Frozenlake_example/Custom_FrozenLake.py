@@ -176,19 +176,14 @@ def FrozenLakeDP(env, discount_factor_g):
     
 def FrozenLakePPO(env, episodes, learning_rate, training):
 
-    # Possibly move the training on the GPU
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-        print("CUDA is available. Using GPU.")
-    else:
-        device = torch.device('cpu')
-        print("CUDA is not available. Using CPU.")
-        
+    device = torch.device('cpu')
+    print(f"The type of device is: {type(device)}")
+
     # Creation of an instance of the class PPO     
     ppo_mlp = PPO("MlpPolicy", env, verbose = 1,
                 learning_rate = learning_rate,
                 device = device,
-                policy_kwargs=dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
+                policy_kwargs = dict(net_arch = [dict(pi = [32, 32], vf = [32, 32])]))
           
     if training:   
           
@@ -244,6 +239,7 @@ if __name__ == '__main__':
     env = FrozenLake(desc = None, map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
     
     # regsiter the environment
+    
     register(
     id = "FrozenLake-v1",
     entry_point = "__main__:FrozenLake",

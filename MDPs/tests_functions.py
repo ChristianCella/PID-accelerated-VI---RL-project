@@ -264,8 +264,10 @@ def experiment_sample_behaviour(MDP, discount, pi, acc_param_list = None,
     state_no = Vopt_true.shape[0]
     if shown_states is None:
         state_ind = arange(0,state_no)
-    elif shown_states=='adaptive':
-        state_ind = arange(0,state_no, max(int(state_no/5),1) )
+    elif shown_states == 'adaptive':
+        #print(f"The error may be {max(3, 1)}")
+        state_ind = np.arange(0,state_no, np.max([int(state_no/5), 1]) )
+        # state_ind = np.arange(0,state_no, 1 )
     else:
         state_ind = shown_states
     # Otherwise, it is assumed to be a list of states
@@ -485,7 +487,7 @@ def experiment_sample_behaviour_gain_adaptation(MDP, discount, pi, acc_param_lis
     if shown_states is None:
         state_ind = arange(0,state_no)
     elif shown_states=='adaptive':
-        state_ind = arange(0,state_no, max(int(state_no/5),1) )
+        state_ind = np.arange(0, state_no, max([int(state_no/5), 1]) )
     else:
         state_ind = shown_states
     # Otherwise, it is assumed to be a list of states
