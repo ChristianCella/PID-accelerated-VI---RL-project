@@ -1,4 +1,6 @@
 # RL project
+This is the repository used for the reproducibility challenge of the paper [PID Accelerated Value Iteration Algorithm](https://proceedings.mlr.press/v139/farahmand21a.html).
+
 ## Structure
 The project is subdivided in 4 main folders, 3 of which ([Frozenlake_example](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/Frozenlake_example), [src](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/src) and [tests](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/tests)) are not 'packages' (no '__init__.py'); for what concerns the first two folders, they are not directly related to the project. More specifically:
 - [Frozenlake_example](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/tree/main/Frozenlake_example), is a folder conatining a testbed for Reinforcement Learning using a tabular approach and some comparisons with Dynamic Programming and Deep Reinforcement Learning. For a better explanation of the codes, take a look at the [readme](https://github.com/ChristianCella/PID-accelerated-VI---RL-project/blob/main/Frozenlake_example/readme.md) inside the folder;
