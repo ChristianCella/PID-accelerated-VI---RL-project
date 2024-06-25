@@ -17,11 +17,11 @@ import MDPs as mdp
 discount = 0.99
 iter_no = 500
 Gain = namedtuple('Gain', ['kP', 'kI', 'kD', 'I_alpha', 'I_beta'], defaults = [1, 0, 0, 0, 0])
-rlocus_flag = True # To plot also additional information about the eigenvalues using the root locus
+rlocus_flag = False # To plot also additional information about the eigenvalues using the root locus
 error_norm_ord = np.inf # or 2 or 1 or np.inf
 discount_str = str(discount).replace('.','p')
-param_name = 'kI'
-param_range = (-0.5, 0.3) # Good range for kI (PE)
+param_name = 'kD'
+param_range = (0.5,0.9)
 
 resolution = 100 # resolution of the controller gain study
 
@@ -64,11 +64,14 @@ elif ProblemType == 'FrozenLake':
     
     # Define the policy
     pi = None
+    # pi = 1
     # pi = 1 # np.random.randint(0, 2, self.n_states)
     # pi = 2 # [0] * self.n_states
     
     # FrozenLake problem
     MDP = mdp.FrozenLakeMDP(map_name = '4x4', is_slippery = True, render_mode = 'human', policy = pi)
+    
+    # pi = MDP.pi # Get the policy from the MDP class
     
     if pi is not None: # You need to know a deterministic policy beforehand
         print(f"The optimal value function obtained in matrix form is: {MDP.V}")

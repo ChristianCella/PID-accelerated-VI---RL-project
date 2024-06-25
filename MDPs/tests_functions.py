@@ -143,10 +143,10 @@ def experiment_1D_param_sweep(MDP, discount, pi, param_name, param_range = (0, 1
 
     if pi is None:
         ylabel('$\||V_k - V^*\||_{'+norm_label+'}$', fontsize = 25)
-        title('Exp 3 - Fig 2 - Control case', fontsize = 20)
+        title('Exp 2 - Fig 2 - Control case', fontsize = 20)
     else:
         ylabel('$\||V_k - V^{\pi}\||_{'+norm_label+'}$', fontsize = 25)
-        title('Exp 3 - Fig 2 - Prediction case', fontsize = 20)
+        title('Exp 2 - Fig 2 - Policy Evaluation case', fontsize = 20)
 
     # ylabel('$\||V - V_k\||_{'+norm_label+'}$', fontsize = 20)
     legend(reporting_iter, fontsize=20)
@@ -242,7 +242,7 @@ def experiment_sample_behaviour(MDP, discount, pi, acc_param_list = None,
         title('Exp 1 - Figure 1 - Control case', fontsize = 20)
     else:
         ylabel('$\||V_k - V^{\pi}\||_{'+norm_label+'}$', fontsize = 25)
-        title('Exp 1 - Figure 1 - Prediction case', fontsize = 20)
+        title('Exp 1 - Figure 1 - Policy Evaluation case', fontsize = 20)
     # legend(['VI (original)','VI with acceleration'])
     legend(fontsize = 18, framealpha=0.5)
     # axis("tight")
@@ -410,10 +410,10 @@ def experiment_sample_behaviour_gain_adaptation(MDP, discount, pi, acc_param_lis
     # ylabel('||V_trace - Vopt_true||', fontsize = 20)
     if pi is None:
         ylabel('$\||V_k - V^*\||_{'+norm_label+'}$', fontsize = 25)
-        title('Exp 2 - Fig 3 - Control case', fontsize = 20)
+        title('Exp 3 - Fig 3 - Control case', fontsize = 20)
     else:
         ylabel('$\||V_k - V^{\pi}\||_{'+norm_label+'}$', fontsize = 25)
-        title('Exp 2 - Fig 3 - Prediction case', fontsize = 20)
+        title('Exp 3 - Fig 3 - Policy Evaluation case', fontsize = 20)
     # legend(['VI (original)','VI with acceleration'])
     legend(fontsize = 15, loc='upper right')
     # axis("tight")
@@ -459,7 +459,7 @@ def experiment_sample_behaviour_gain_adaptation(MDP, discount, pi, acc_param_lis
     #     ylabel('$\||V_k - V^{\pi}\||_{'+norm_label+'}$', fontsize = 20)
     # # legend(['VI (original)','VI with acceleration'])
     legend(['$k_p$', '$k_I$', '$k_d$'], fontsize = 20)
-    title('Exp 2 - Figure 3b - Controller gains', fontsize = 20)
+    title('Exp 3 - Figure 3b - Controller gains', fontsize = 20)
     # axis("tight")
     grid(True,which='both')
     xticks(fontsize = 15)
@@ -632,7 +632,8 @@ def experiment_gain_adaptation_garnet(discount, pi, hyper_param_list,
                                 with_hp_model_selection = False,
                                 normalization_flag = 'BE2',
                                 iter_no = 500,
-                                error_norm_ord = np.inf):
+                                error_norm_ord = np.inf,
+                                param_range = (0, 3500)):
 
     # Define some empty lists
     normalized_conv_VI_error = []
@@ -644,9 +645,20 @@ def experiment_gain_adaptation_garnet(discount, pi, hyper_param_list,
 
         print('Run:', run)
         
-        # Generate a new MDP (no choice: you want to focus on Garnet)
-        MDP = FiniteMDP(StateSize = state_size, ActionSize = action_size,
-                                    ProblemType='garnet', GarnetParam = GarnetParam)
+        state_size = 16
+    
+        # Define the policy
+        pi = None
+        # pi = 1
+        # pi = 1 # np.random.randint(0, 2, self.n_states)
+        # pi = 2 # [0] * self.n_states
+    
+        # FrozenLake problem
+        MDP = FrozenLakeMDP(map_name = '4x4', is_slippery = True, render_mode = 'human', policy = pi)
+        
+        # # Generate a new MDP (no choice: you want to focus on Garnet)
+        # MDP = FiniteMDP(StateSize = state_size, ActionSize = action_size,
+        #                             ProblemType='garnet', GarnetParam = GarnetParam)
         
         # Call the function defined above to evaluate the gain adaptation
         (error_list, V_trace_list, gain_trace_list, Vopt_true) = \
@@ -730,15 +742,19 @@ def experiment_gain_adaptation_garnet(discount, pi, hyper_param_list,
     
     if pi is None: # Control
         ylabel('$\||V_k - V^*\||_{'+norm_label+'} / \||V^*\||_{'+norm_label+'}$', fontsize = 25)
-        title('No policy $\pi$ - Control', fontsize = 20)
+        title('Exp 4 - Fig 4 - Control case', fontsize = 20)
     else: # Prediction
         ylabel('$\||V_k - V^{\pi}\||_{'+norm_label+'} / \||V^{\pi} \||_{'+norm_label+'}$', fontsize = 25)
-        title('Prediction', fontsize = 20)
+        title('Policy Evaluation', fontsize = 20)
     legend(fontsize = 12, framealpha=0.5) # 15 for most figures
     axis("tight")
     grid(True,which='both')
     xticks(fontsize = 15)
     yticks(fontsize = 15)
+    
+    xlim(param_range)
     #show()
+    
+    
 
 

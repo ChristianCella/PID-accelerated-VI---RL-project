@@ -64,12 +64,13 @@ elif ProblemType == 'FrozenLake':
     
     # Define the policy
     pi = None
+    # pi = 1
     # pi = 1 # np.random.randint(0, 2, self.n_states)
     # pi = 2 # [0] * self.n_states
     
     # FrozenLake problem
     MDP = mdp.FrozenLakeMDP(map_name = '4x4', is_slippery = True, render_mode = 'human', policy = pi)
-    
+    # pi = MDP.pi
     if pi is not None: # You need to know a deterministic policy beforehand
         print(f"The optimal value function obtained in matrix form is: {MDP.V}")
 
