@@ -176,7 +176,9 @@ def FrozenLakeDP(env, discount_factor_g):
     
 def FrozenLakePPO(env, episodes, learning_rate, training):
 
-    device = torch.device('cpu')
+    print(" ------------- Proximal Policy Optimization (PPO) ------------- ")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') # Check if a GPU is available
+    print(f"The device is: {device}")
     print(f"The type of device is: {type(device)}")
 
     # Creation of an instance of the class PPO     
@@ -235,7 +237,7 @@ def FrozenLakePPO(env, episodes, learning_rate, training):
 if __name__ == '__main__':
     
     # Create an instance of the class (render = True: the environment is displayed on the screen)
-    render = True
+    render = False
     env = FrozenLake(desc = None, map_name = '8x8', is_slippery = False, render_mode = 'human' if render else None)
     
     # regsiter the environment
